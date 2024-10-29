@@ -1,9 +1,12 @@
 import express from "express";
+import { PrismaClient } from "@prisma/client";
+
 import dotenv from 'dotenv'
-import { connectDB } from "./config/connect.js";
-
-
 dotenv.config()
+
+const prisma = new PrismaClient();
+
+
 const app = express();
 
 app.use(express.json())
@@ -14,23 +17,16 @@ const PORT = 3000 || process.env.PORT
 
 const start = async ()=>{
     try {
-        const sequelize = connectDB(process.env.DB_NAME, 
-            process.env.DB_USERNAME, 
-            process.env.DB_PASSWORD, 
-            process.env.DB_HOST, 
-            process.env.DB_PORT
-        )
-        await sequelize.authenticate()
-        console.log('Connection has been established successfully.');
+        await prisma.$connect();
+        console.log('Database connection successful')
         app.listen(PORT, ()=> {
             console.log(`Server running on port ${PORT}`)
         })
     } catch (error) {
-        console.error('Unable to start the server')
-        console.error('Unable to connect to the database:', error);
-
+        console.error(e);
+        await prisma.$disconnect();
+        process.exit(1);
     }
 }
-
 
 start()
