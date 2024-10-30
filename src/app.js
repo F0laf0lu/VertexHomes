@@ -1,16 +1,23 @@
 import express from "express";
-import { PrismaClient } from "@prisma/client";
+import prisma from "./utils/prisma.js";
+
 
 import dotenv from 'dotenv'
 dotenv.config()
-
-const prisma = new PrismaClient();
 
 
 const app = express();
 
 app.use(express.json())
 
+
+
+app.all('*', (req, res)=>{
+    res.status(404).json({
+        status:"failed",
+        message: `Route ${req.originalUrl} not found`    
+    })
+})
 
 
 const PORT = 3000 || process.env.PORT
