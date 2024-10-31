@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
+import HTML_TEMPLATE from './mail-template';
 
 dotenv.config();
 
@@ -14,14 +15,14 @@ const transporter = nodemailer.createTransport({
 });
 
 
-export const sendEmailVerification = async (userEmail,text,html, subject)=>{
+export const sendEmailVerification = async (userEmail,text,html)=>{
     
     const emailDetails = {
         from:process.env.EMAIL_USER,
         to:userEmail,
         text:text,
         html:html,
-        subject:subject
+        subject:"Email verification link"
     }
     await transporter.sendMail(emailDetails);
 };
