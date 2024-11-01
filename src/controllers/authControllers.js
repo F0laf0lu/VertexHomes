@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt'
-import { matchedData, validationResult } from 'express-validator'
+import { validationResult } from 'express-validator'
 import { generateToken, verifyToken } from '../utils/tokenUtils.js'
 import config from '../config.js'
 import { BadRequestError, CustomError } from '../utils/error.js'
@@ -7,48 +7,41 @@ import { BadRequestError, CustomError } from '../utils/error.js'
 export const register = async(req, res)=>{
 
     
-            const errors = validationResult(req)
-            if (!errors.isEmpty()) {
-                res.status(400).json({ 
-                    status:"failed",
-                    errors: errors.array().map((err)=> err.msg)
-                })
-                return;
-            } 
-
-            const {firstname, password, lastname, email, role} = req.body
-
-            // const salt = await bcrypt.genSalt(10);
-            // const hashedPassword = bcrypt.hash(password, salt);
-
-            // const newUser = await prisma.user.create({
-            //     data:{
-            //         firstName:firstname,
-            //         password: hashedPassword,
-            //         lastName:lastname,
-            //         email,
-            //         role
-            //     }
-            // })
-
-            // send confirmation link for email verification
-            // test verification using sample link
-            const verifyToken = generateToken(req.body)
-            const verifyLink = `http://localhost:${config.port}/api/verify/${verifyToken}`;
-
-            console.log(verifyToken)
-            
-            res.status(201).json({
-                status: 'success',
-                message: 'user created successfully',
-                data: req.body,
-                emailVerifyLink: `Please click here to verify your email ${verifyLink}`
-            })
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+        res.status(400).json({ 
+            status:"failed",
+            errors: errors.array().map((err)=> err.msg)
+        })
+        return;
+    } 
+    const {firstname, password, lastname, email, role} = req.body
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+    const userRole = role ? role.toUpperCase() : 'USER';
+    const newUser = await prisma.user.create({
+        data:{
+            firstName:firstname,
+            password: hashedPassword,
+            lastName:lastname,
+            email,
+            role:userRole
+        }
+    })
+    
+    // send confirmation link for email verification
+    const verifyToken = generateToken(req.body)
+    const verifyLink = `http://localhost:${config.port}/api/verify/${verifyToken}`;
+    res.status(201).json({
+        status: 'success',
+        message: 'user created successfully',
+        data: req.body,
+        emailVerifyLink: `Please click here to verify your email ${verifyLink}`
+    })
 }
 
 
 export const verifyEmail = async(req, res)=>{
-
     const {token} = req.params
     if (!token) {
         throw new BadRequestError("Token must be provided")
@@ -67,22 +60,19 @@ export const verifyEmail = async(req, res)=>{
 
 
 export const resendVerificationLink = async (req, res)=>{
-    
     const {userid} = req.body
-    
     if (!userid) {
         throw new BadRequestError("userid is required");
     }
     // check userid is valid and does exist
     // get user from the database
 
+    // sampple data
     const user = {
         email:"johndoe@gmail.com",
         role: "AGENT"
     }
-
     const newVerifyLink = `http://localhost:${config.port}/api/auth/verify/${generateToken(user)}`;
-    
     res.status(200).json({
         status:"success",
         message: "Verification link sent",
@@ -92,20 +82,16 @@ export const resendVerificationLink = async (req, res)=>{
 
 export const forgotPassword = async (req, res)=>{
     const {email} = req.body
-
     if (!email) {
         throw new BadRequestError("You need to provide your email");
     }
     // find the email in the database
-
     const resetUser = {
         email:"johndoe@gmail.com",
         role: "AGENT"
     }
-
-    // then
+    // then send link
     const resetLink = `http://localhost:${config.port}/api/auth/reset/${generateToken(resetUser)}`
-
     res.status(200).json({
         status: "success",
         message: "A reset password link has been sent to your email",
@@ -117,7 +103,6 @@ export const forgotPassword = async (req, res)=>{
 export const resetPassword = async(req, res) => {
     const {password, confirmPassword} = req.body
     const {token} = req.params
-
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         res.status(400).json({ 
@@ -126,15 +111,11 @@ export const resetPassword = async(req, res) => {
         })
         return;
     }
-
     // verify the token
     const tokenUser = verifyToken(token)
-
     const salt = await bcrypt.genSalt(10)
     const newPassword = bcrypt.hash(password, salt)
-    
     // update password of user in the database
-
     res.status(200).json({
         status:"success",
         message:"Password reset successfully"

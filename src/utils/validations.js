@@ -1,22 +1,25 @@
 import { body, param } from "express-validator";
 import prisma from "./prisma.js";
-
-export const uniqueEmail = body('email').custom(async (value)=>{
-    const userEmail = await prisma.user()
-    if (user) {
-        throw new Error("This email has been used");
-    };
-})
+import { BadRequestError, CustomError, NotFoundError } from "./error.js";
 
 const allowedRoles = ["USER", "AGENT", "ADMIN"];
-
 
 export const validateRegister = [
     body('email')
         .trim()
         .notEmpty().withMessage('Email is required')
         .isEmail().withMessage('Please enter a valid email')
-        .normalizeEmail(),
+        .normalizeEmail()
+        .custom(async (value)=>{
+                const userEmail = await prisma.user.findUnique({
+                    where: {
+                        email: value
+                    }
+                })
+                if (userEmail) {
+                    throw new Error("E-mail already in use");
+                };
+            }),
 
     body('firstname')
         .trim()
@@ -60,10 +63,39 @@ export const resetPasswordValidate = [
         .matches(/\d/).withMessage('Password must contain at least one number')
         .matches(/[!@#$%^&*]/).withMessage("Password must contain at least one special character.").not().matches(/\s/).withMessage("Password cannot contain whitespace."),
 
-
-
-        
         // Still validate password are the same
         param('token')
             .notEmpty().withMessage('Token is required')
+]
+
+
+export const validateAgentProfile = [
+    body('license')
+        .trim()
+        .notEmpty().withMessage("Please provide the license number")
+        .matches(/^(\d{4}-){3}\d{4}$/g).withMessage('license format is invalid'),
+
+    body('location')
+        .optional()
+        .trim()
+        .isAlpha(),
+
+    body('agencyName')
+        .trim()
+        .notEmpty().withMessage("Please enter your agency name"),
+
+    body('userId')
+        .trim()
+        .notEmpty().withMessage('Provide the user id')
+        .custom(async (value)=>{
+                const agentUser = await prisma.user.findUnique({
+                    where:{id:value}})
+                    if (!agentUser) {
+                        throw new NotFoundError("User does not exist");
+                    }
+                    if (agentUser.role !== 'AGENT') {
+                        throw new CustomError("This user role is not an agent", 403)
+                    }
+                })
+                
 ]

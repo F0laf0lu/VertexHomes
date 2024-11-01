@@ -16,10 +16,13 @@ datasource db {
 model User {
   id String @id @default(uuid())
   email String @unique
-  firstName String @unique
-  lastName String @unique
+  firstName String 
+  lastName String 
+  password String
   role Role @default(USER)
   is_verified Boolean @default(false)
+  is_active Boolean @default(true)
+  profile AgentProfile? 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -27,7 +30,18 @@ model User {
 enum Role {
   USER
   AGENT
-  ADIMN
+  ADMIN
 }
 
+model AgentProfile {
+  id String @id @default(uuid())
+  userId  String   @unique
+  user User @relation(fields: [userId], references: [id])
+  license String 
+  location String?
+  agencyName String
+  ratingAverage Int @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
 

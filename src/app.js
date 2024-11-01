@@ -3,10 +3,11 @@ import express from "express";
 import prisma from "./utils/prisma.js";
 import { userRouter } from "./routes/authRouter.js";
 import config from "./config.js";
-
+import { errorHandler } from "./middlewares/ErrorHandler.js";
 
 import dotenv from 'dotenv'
-import { errorHandler } from "./middlewares/errorHandler.js";
+import { agentRouter } from './routes/agentRoutes.js';
+
 dotenv.config()
 
 
@@ -14,7 +15,7 @@ const app = express();
 
 app.use(express.json())
 app.use('/api/auth', userRouter)
-
+app.use('/api/users/agents', agentRouter)
 
 app.all('*', (req, res)=>{
     res.status(404).json({

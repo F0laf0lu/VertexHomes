@@ -16,5 +16,5 @@ class BadRequestError extends CustomError {
         super(message, 400)
     }
 }
- 
+
 export {CustomError, BadRequestError, NotFoundError}
