@@ -17,15 +17,15 @@ app.use(express.json())
 app.use('/api/auth', userRouter)
 app.use('/api/users/agents', agentRouter)
 
+app.use(errorHandler)
+
+
 app.all('*', (req, res)=>{
     res.status(404).json({
         status:"failed",
         message: `Cannot ${req.method} ${req.originalUrl}. Not found`    
     })
 })
-
-app.use(errorHandler)
-
 
 
 const start = async ()=>{

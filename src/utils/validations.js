@@ -95,7 +95,15 @@ export const validateAgentProfile = [
                     }
                     if (agentUser.role !== 'AGENT') {
                         throw new CustomError("This user role is not an agent", 403)
-                    }
-                })
-                
+                    }})
+        .custom(async (value) => {
+            const agentProfile = await prisma.agentProfile.findUnique({
+                where:{
+                    userId:value
+                }
+            })
+            if (agentProfile) {
+                throw new CustomError("Agent profile exists already", 400);    
+            }
+        })
 ]
