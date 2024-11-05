@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt'
 import { validationResult } from 'express-validator'
 import { generateToken, verifyToken } from '../utils/tokenUtils.js'
 import config from '../config.js'
-import { BadRequestError, CustomError } from '../utils/error.js'
+import { BadRequestError, CustomError, UnauthorizedError } from '../utils/error.js'
 
 export const register = async(req, res)=>{
 
@@ -119,5 +119,30 @@ export const resetPassword = async(req, res) => {
     res.status(200).json({
         status:"success",
         message:"Password reset successfully"
+    })
+}
+
+export const login = async (req, res)=>{
+    const {email, password} = req.body
+    if (!email || !password) {
+        throw new BadRequestError("Email and password required");
+    }
+    const user = await prisma.user.findUnique({
+        where: {
+            email
+        }
+    })
+    if (!user) {
+        throw new UnauthorizedError("Invalid email or password");
+    }
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+        throw new UnauthorizedError("Invalid email or password");
+    }
+    const token = generateToken(user)
+
+    res.status(200).json({
+        success: true,
+        data: {token}
     })
 }

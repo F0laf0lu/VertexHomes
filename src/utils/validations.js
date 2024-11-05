@@ -1,6 +1,6 @@
 import { body, param } from "express-validator";
 import prisma from "./prisma.js";
-import { BadRequestError, CustomError, NotFoundError } from "./error.js";
+import { BadRequestError, CustomError, NotFoundError, PermissionDeniedError } from "./error.js";
 
 const allowedRoles = ["USER", "AGENT", "ADMIN"];
 
@@ -78,7 +78,7 @@ export const validateAgentProfile = [
     body('location')
         .optional()
         .trim()
-        .isAlpha(),
+        .isString().withMessage("Location should be a string"),
 
     body('agencyName')
         .trim()
@@ -87,6 +87,7 @@ export const validateAgentProfile = [
     body('userId')
         .trim()
         .notEmpty().withMessage('Provide the user id')
+        // check user id exists and role is agent
         .custom(async (value)=>{
                 const agentUser = await prisma.user.findUnique({
                     where:{id:value}})
@@ -96,6 +97,7 @@ export const validateAgentProfile = [
                     if (agentUser.role !== 'AGENT') {
                         throw new CustomError("This user role is not an agent", 403)
                     }})
+        // check profile has not been created before
         .custom(async (value) => {
             const agentProfile = await prisma.agentProfile.findUnique({
                 where:{
@@ -107,3 +109,36 @@ export const validateAgentProfile = [
             }
         })
 ]
+
+
+export const validateAgentUpdate = [
+    body('license')
+        .optional()
+        .trim()
+        .notEmpty().withMessage("Please provide the license number")
+        .matches(/^(\d{4}-){3}\d{4}$/g).withMessage('license format is invalid'),
+
+    body('agencyName')
+        .optional()
+        .trim()
+        .notEmpty().withMessage("Please enter your agency name"),
+
+    body('location')
+        .optional()
+        .trim()
+        .isString().withMessage("Location should be a string"),
+
+    param('agentId')
+        .custom(async (value)=>{
+            const agent = await prisma.agentProfile.findUnique({
+                where:{
+                    id:value
+                }
+            })
+            if (!agent) {
+                throw new NotFoundError("You need to be an agent to perform this action");
+            }
+        })
+]
+
+

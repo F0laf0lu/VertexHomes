@@ -3,11 +3,10 @@ import config from '../config.js'
 
 export const generateToken = (user)=>{
     const token = jwt.sign({
-        // id: user.id, 
+        id: user.id, 
         email: user.email, role: user.role}, 
         config.jwt_secret, 
         { expiresIn: '1d'})
-
         return token;
 }
 

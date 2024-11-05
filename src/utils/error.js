@@ -1,20 +1,30 @@
-class CustomError extends Error{
+export class CustomError extends Error{
     constructor(message, statusCode){
         super(message);
         this.statusCode = statusCode
     }
 }
 
-class NotFoundError extends CustomError {
+export class NotFoundError extends CustomError {
     constructor(message) {
         super(message, 404); 
     }
 }
 
-class BadRequestError extends CustomError {
+export class BadRequestError extends CustomError {
     constructor(message) {
         super(message, 400)
     }
 }
 
-export {CustomError, BadRequestError, NotFoundError}
+export class UnauthorizedError extends CustomError{
+    constructor(message){
+        super(message,  401)
+    }
+}
+
+export class PermissionDeniedError extends CustomError{
+    constructor(message){
+        super(message, 403)
+    }
+}

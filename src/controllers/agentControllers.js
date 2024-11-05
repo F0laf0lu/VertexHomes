@@ -1,6 +1,10 @@
 import { validationResult } from "express-validator"
 import prisma from "../utils/prisma.js"
-import { BadRequestError } from "../utils/error.js"
+import { BadRequestError, PermissionDeniedError } from "../utils/error.js"
+
+
+
+
 
 
 export const createAgentProfile = async (req, res)=>{
@@ -25,25 +29,49 @@ export const createAgentProfile = async (req, res)=>{
 }
 
 
-
-// User needs to be logged in to do this
-export const updateAgentProfile = async (req,res)=>{
-
-    const {userId, license, location, agencyName} = req.body
-
-    const updateProfile = prisma.agentProfile
-
-    res.statu(200).json({
+export const updateAgentProfile = async (req, res)=>{
+    const {license, location, agencyName} = req.body
+    const {id} = req.user
+    const updatedAgent = await prisma.agentProfile.update({
+        where:{
+            userId:id
+        },
+        data:{
+            license, location, agencyName
+        }
+    })
+    res.status(200).json({
         status: "success",
-        message: "Agent profile updated successfully"
+        message: "Agent profile updated successfully",
+        data: updatedAgent
     })
 }
 
 
-export const deleteProfile = async(req, res)=>{
+
+// Start here when you open next
+export const deleteProfile = async(req, res) => {
+    const {id} = req.user
+    const deleteAgent = await prisma.agentProfile.delete({
+        where: {
+            userId:id
+        }
+    })
+
+    const deleteUser = await prisma.user.update({
+        where:{
+            id:userId
+        },
+        data:{
+            is_active:false
+        }
+    })
+
 
     res.status(200).json({
         status:"success",
-        message:"profile deleted successfully"
+        message:"profile deleted successfully",
+        data: deleteUser,
+        agent: deleteAgent
     })
 }
