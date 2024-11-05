@@ -1,6 +1,6 @@
 import { body, param } from "express-validator";
-import prisma from "./prisma.js";
-import { BadRequestError, CustomError, NotFoundError, PermissionDeniedError } from "./error.js";
+import prisma from "../prisma.js";
+import { BadRequestError, CustomError, NotFoundError} from "./error.js";
 
 const allowedRoles = ["USER", "AGENT", "ADMIN"];
 
@@ -51,6 +51,7 @@ export const validateRegister = [
         return true; 
     })
 ]                             
+
 
 export const resetPasswordValidate = [
     body('password')

@@ -1,6 +1,6 @@
 import 'express-async-errors'
 import express from "express";
-import prisma from "./utils/prisma.js";
+import prisma from "./prisma.js";
 import { userRouter } from "./routes/authRouter.js";
 import config from "./config.js";
 import { errorHandler } from "./middlewares/ErrorHandler.js";

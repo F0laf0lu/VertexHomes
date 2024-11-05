@@ -2,11 +2,11 @@ import bcrypt from 'bcrypt'
 import { validationResult } from 'express-validator'
 import { generateToken, verifyToken } from '../utils/tokenUtils.js'
 import config from '../config.js'
-import { BadRequestError, CustomError, UnauthorizedError } from '../utils/error.js'
+import { BadRequestError, ConflictError, CustomError, NotFoundError, UnauthorizedError } from '../utils/error.js'
+import { createUser, loginUser, resendUserVerifyLink, resetUserPassword, userForgotPassword, verifyUser } from '../services/authService.js'
 
 export const register = async(req, res)=>{
 
-    
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
         res.status(400).json({ 
@@ -15,134 +15,117 @@ export const register = async(req, res)=>{
         })
         return;
     } 
+
     const {firstname, password, lastname, email, role} = req.body
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-    const userRole = role ? role.toUpperCase() : 'USER';
-    const newUser = await prisma.user.create({
-        data:{
-            firstName:firstname,
-            password: hashedPassword,
-            lastName:lastname,
-            email,
-            role:userRole
-        }
-    })
-    
-    // send confirmation link for email verification
-    const verifyToken = generateToken(req.body)
-    const verifyLink = `http://localhost:${config.port}/api/verify/${verifyToken}`;
+    const {user, verifyLink} = await createUser(firstname, lastname, email,password, role)
+
     res.status(201).json({
-        status: 'success',
-        message: 'user created successfully',
-        data: req.body,
+        success: true,
+        message: 'User created successfully',
+        data: {
+            id: user.id,
+            firstname: user.firstName,
+            lastname: user.lastName,
+            email: user.email,
+            role: user.role,
+        },
         emailVerifyLink: `Please click here to verify your email ${verifyLink}`
+    });
+}
+
+export const login = async(req,res)=>{
+    const {email, password} = req.body
+    if (!email || !password) {
+        throw new BadRequestError("Email and password required");
+    }
+    const token = await loginUser(email, password);
+    if (!token) {
+        throw new UnauthorizedError("Invalid email or password");
+    }
+    res.status(200).json({
+        success: true,
+        data: { token }
     })
 }
 
-
-export const verifyEmail = async(req, res)=>{
+export const verifyEmail = async (req, res) => {
     const {token} = req.params
     if (!token) {
         throw new BadRequestError("Token must be provided")
     }
+    const verified = await verifyUser(token)
 
-    const userPayload = verifyToken(token) 
-    // Check for errors in jwt verification
-    console.log(userPayload)
-    
-    //Then, find the user in the database and update is_verified to true
+    if (!verified) {
+        throw new UnauthorizedError("Invalid token or user not found");
+    }
     res.status(200).json({
         status:"success",
         message:"User email has been successfully verified"
     })
 }
 
-
 export const resendVerificationLink = async (req, res)=>{
-    const {userid} = req.body
-    if (!userid) {
-        throw new BadRequestError("userid is required");
-    }
-    // check userid is valid and does exist
-    // get user from the database
+    const { userId } = req.body;
 
-    // sampple data
-    const user = {
-        email:"johndoe@gmail.com",
-        role: "AGENT"
+    if (!userId) {
+        throw new BadRequestError("User ID is required");
     }
-    const newVerifyLink = `http://localhost:${config.port}/api/auth/verify/${generateToken(user)}`;
+    const newVerifyLink = await resendUserVerifyLink(userId);
+
+    if (result === "USER_NOT_FOUND") {
+        throw new NotFoundError("User not found");
+    }
+
+    if (result === "USER_ALREADY_VERIFIED") {
+        throw new ConflictError("User is already verified");
+    }
+
     res.status(200).json({
-        status:"success",
+        status: "success",
         message: "Verification link sent",
-        data: {newVerifyLink}
-    })
+        data: { newVerifyLink },
+    });
 }
 
 export const forgotPassword = async (req, res)=>{
-    const {email} = req.body
+    const { email } = req.body;
+
     if (!email) {
         throw new BadRequestError("You need to provide your email");
     }
-    // find the email in the database
-    const resetUser = {
-        email:"johndoe@gmail.com",
-        role: "AGENT"
+    const resetLink = await userForgotPassword(email);
+
+    if (!resetLink) {
+        throw new NotFoundError("User with this email does not exist");
     }
-    // then send link
-    const resetLink = `http://localhost:${config.port}/api/auth/reset/${generateToken(resetUser)}`
+
     res.status(200).json({
         status: "success",
         message: "A reset password link has been sent to your email",
-        data: {resetLink}
-    })
+        data: { resetLink },
+    });
 }
 
-
 export const resetPassword = async(req, res) => {
-    const {password, confirmPassword} = req.body
-    const {token} = req.params
+    const { password, confirmPassword } = req.body;
+    const { token } = req.params;
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         res.status(400).json({ 
-            status:"failed",
-            errors: errors.array().map((err)=> err.msg)
-        })
+            status: "failed",
+            errors: errors.array().map((err) => err.msg),
+        });
         return;
     }
-    // verify the token
-    const tokenUser = verifyToken(token)
-    const salt = await bcrypt.genSalt(10)
-    const newPassword = bcrypt.hash(password, salt)
-    // update password of user in the database
+    if (password !== confirmPassword) {
+        throw new BadRequestError("Passwords do not match");
+    }
+    const updatedUser = await resetUserPassword(token, password);
+    if (!updatedUser) {
+        throw new UnauthorizedError("Invalid or expired token");
+    }
     res.status(200).json({
-        status:"success",
-        message:"Password reset successfully"
-    })
-}
-
-export const login = async (req, res)=>{
-    const {email, password} = req.body
-    if (!email || !password) {
-        throw new BadRequestError("Email and password required");
-    }
-    const user = await prisma.user.findUnique({
-        where: {
-            email
-        }
-    })
-    if (!user) {
-        throw new UnauthorizedError("Invalid email or password");
-    }
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-        throw new UnauthorizedError("Invalid email or password");
-    }
-    const token = generateToken(user)
-
-    res.status(200).json({
-        success: true,
-        data: {token}
-    })
+        status: "success",
+        message: "Password reset successfully",
+    });
 }

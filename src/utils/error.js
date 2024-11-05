@@ -28,3 +28,11 @@ export class PermissionDeniedError extends CustomError{
         super(message, 403)
     }
 }
+
+export class ConflictError extends Error {
+    constructor(message) {
+        super(message);
+        this.statusCode = 409;
+        this.name = "ConflictError";
+    }
+}
