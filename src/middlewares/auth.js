@@ -1,7 +1,7 @@
 import { UnauthorizedError } from "../utils/error.js";
 import { verifyToken } from "../utils/tokenUtils.js";
 
-export const authService = (req, res, next)=>{
+export const authMiddleware = (req, res, next)=>{
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
         throw new UnauthorizedError("Authorization details not provided or invalid");

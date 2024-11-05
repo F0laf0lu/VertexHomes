@@ -1,6 +1,6 @@
 import { validationResult } from "express-validator"
 import prisma from "../prisma.js"
-import { BadRequestError, PermissionDeniedError } from "../utils/error.js"
+import { BadRequestError} from "../utils/error.js"
 
 
 

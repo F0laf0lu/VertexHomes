@@ -26,7 +26,6 @@ export const createUser = async(firstname, lastname, email, password, role)=>{
 
 
 export const loginUser = async(email, password)=>{
-    let error = false
     const user = await prisma.user.findUnique({
         where: {
             email
