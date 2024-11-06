@@ -1,6 +1,6 @@
 export const errorHandler = (err, req, res, next)=>{
     console.log("Middleware error handling")
-    // console.error(err)
+    console.error(err)
 
     let errStatus = err.statusCode || 500;
     let errMessage = err.message || "Internal Server Error"

@@ -1,14 +1,18 @@
-import prisma from "../prisma";
+import prisma from "../prisma.js";
 
-// Delete User
-// Update User
-// Get User
-// create agent profile
 
 export const getUserById = async(userId)=>{
-    const user = await prisma.findUnique({
+    const user = await prisma.user.findUnique({
         where:{
             id:userId
+        },
+        select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            role: true,
+            is_active: true,
         }
     });
     return user

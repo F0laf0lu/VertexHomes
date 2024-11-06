@@ -1,13 +1,30 @@
 import { validationResult } from "express-validator"
 import prisma from "../prisma.js"
-import { BadRequestError} from "../utils/error.js"
+import { BadRequestError, NotFoundError, PermissionDeniedError} from "../utils/error.js"
+import { deleteAgentProfileService, getAgentProfileService, updateAgentProfileService } from "../services/agentService.js"
 
 
+export const getAgentProfile = async(req, res)=>{
+    const {agentId} = req.params
+    if (!agentId) {
+        throw new BadRequestError("Provide agent id in the params");
+        
+    }
+    const agent = await getAgentProfileService(agentId)
 
+    if (!agent) {
+        throw new NotFoundError("agent not found");
+    };
+    res.status(200).json({
+        success:true,
+        data: agent
+    })
+}
 
 
 
 export const createAgentProfile = async (req, res)=>{
+    // get userid from token and create the agent profile with it
     const {userId, license, location, agencyName} = req.body
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
@@ -32,14 +49,21 @@ export const createAgentProfile = async (req, res)=>{
 export const updateAgentProfile = async (req, res)=>{
     const {license, location, agencyName} = req.body
     const {id} = req.user
-    const updatedAgent = await prisma.agentProfile.update({
+    const {agentId} = req.params
+
+    const user = await prisma.agentProfile.findUnique({
         where:{
+            id:agentId,
             userId:id
-        },
-        data:{
-            license, location, agencyName
         }
     })
+
+    if (!user) {
+        throw new PermissionDeniedError("You don't have permission to perform this action");
+    }
+    
+    const updatedAgent = await updateAgentProfileService(agentId, license, location, agencyName)
+
     res.status(200).json({
         status: "success",
         message: "Agent profile updated successfully",
@@ -52,26 +76,23 @@ export const updateAgentProfile = async (req, res)=>{
 // Start here when you open next
 export const deleteProfile = async(req, res) => {
     const {id} = req.user
-    const deleteAgent = await prisma.agentProfile.delete({
-        where: {
+    const {agentId} = req.params
+
+    const user = await prisma.agentProfile.findUnique({
+        where:{
+            id:agentId,
             userId:id
         }
     })
 
-    const deleteUser = await prisma.user.update({
-        where:{
-            id:userId
-        },
-        data:{
-            is_active:false
-        }
-    })
+    if (!user) {
+        throw new PermissionDeniedError("You don't have permission to perform this action");
+    }
 
+    const deleteuser = await deleteAgentProfileService(agentId, id)
 
     res.status(200).json({
         status:"success",
         message:"profile deleted successfully",
-        data: deleteUser,
-        agent: deleteAgent
     })
 }

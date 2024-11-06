@@ -15,6 +15,4 @@ router.post('/reset/:token', resetPasswordValidate, resetPassword)
 router.post('/login', login)
 
 
-
-
-export { router as userRouter}
+export { router as authRoutes}

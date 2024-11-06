@@ -1,12 +1,13 @@
 import 'express-async-errors'
 import express from "express";
 import prisma from "./prisma.js";
-import { userRouter } from "./routes/authRouter.js";
+
 import config from "./config.js";
 import { errorHandler } from "./middlewares/ErrorHandler.js";
-
 import dotenv from 'dotenv'
 import { agentRouter } from './routes/agentRoutes.js';
+import { userRoutes } from './routes/userRoutes.js';
+import { authRoutes } from './routes/authRoutes.js';
 
 dotenv.config()
 
@@ -14,7 +15,8 @@ dotenv.config()
 const app = express();
 
 app.use(express.json())
-app.use('/api/auth', userRouter)
+app.use('/api/auth', authRoutes)
+app.use('/api/users', userRoutes)
 app.use('/api/users/agents', agentRouter)
 
 app.use(errorHandler)

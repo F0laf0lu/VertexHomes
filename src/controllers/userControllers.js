@@ -1,53 +1,58 @@
-import { deactivateUserService, getUserById, updateUserService } from "../services/userService"
-import { NotFoundError, PermissionDeniedError} from "../utils/error";
+import { getUserById, updateUserService, deactivateUserService } from "../services/userService.js";
+import { NotFoundError, PermissionDeniedError } from "../utils/error.js";
 
 
 export const getUser = async (req, res) => {
-    const {userId} = req.param
-    const user = await getUserById(userId)
+    const { userId } = req.params;
 
+    const user = await getUserById(userId);
     if (!user) {
         throw new NotFoundError("User not found");
     }
-    
-    res.status(200).json({
-        success: true,
-        data: user
-    })
-}
 
-export const updateUser = async (req, res)=>{
-    const {firstname, lastname} = req.body
-    const {id} = req.user
-    const {userId} = req.params
+    res.status(200).json({
+        status: "success",
+        data: user,
+    });
+};
+
+
+export const updateUser = async (req, res) => {
+    const { firstname, lastname } = req.body;
+    const { id } = req.user;
+    const { userId } = req.params;
 
     if (id !== userId) {
         throw new PermissionDeniedError("You don't have permission to update this user");
-        
     }
-    const updatedUser = await updateUserService(userId, firstname, lastname)
+
+    const updatedUser = await updateUserService(userId, firstname, lastname);
     if (!updatedUser) {
         throw new NotFoundError("User not found");
     }
+
     res.status(200).json({
-        success: true,
-        data: updateUser
-    })
-}
+        status: "success",
+        message: "User updated successfully",
+        data: updatedUser,
+    });
+};
+
 
 export const deactivateUser = async (req, res) => {
-    const {id} = req.user
-    const {userId} = req.params
+    const { id } = req.user; 
+    const { userId } = req.params;
 
     if (id !== userId) {
-        throw new PermissionDeniedError("You don't have permission to update this user");
+        throw new PermissionDeniedError("You don't have permission to deactivate this user");
     }
-    const deleteUser = await deactivateUserService(userId)
-    if (!deleteUser) {
+
+    const deactivatedUser = await deactivateUserService(userId);
+    if (!deactivatedUser) {
         throw new NotFoundError("User not found");
     }
     res.status(200).json({
-        success:true,
-        message: "Deactivation Successful"
-    })
-}
+        status: "success",
+        message: "User deactivated successfully",
+    });
+};
