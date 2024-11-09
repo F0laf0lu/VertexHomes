@@ -72,8 +72,6 @@ export const updateAgentProfile = async (req, res)=>{
 }
 
 
-
-// Start here when you open next
 export const deleteProfile = async(req, res) => {
     const {id} = req.user
     const {agentId} = req.params
@@ -86,10 +84,12 @@ export const deleteProfile = async(req, res) => {
     })
 
     if (!user) {
+        devLogger.warn(`Unauthorized access attempt by user ${id}`);
         throw new PermissionDeniedError("You don't have permission to perform this action");
     }
 
     const deleteuser = await deleteAgentProfileService(agentId, id)
+    devLogger.info(`Account deactication attempt:  user ${id}`);
 
     res.status(200).json({
         status:"success",

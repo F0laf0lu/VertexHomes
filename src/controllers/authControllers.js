@@ -4,6 +4,7 @@ import { generateToken, verifyToken } from '../utils/tokenUtils.js'
 import config from '../config.js'
 import { BadRequestError, ConflictError, CustomError, NotFoundError, UnauthorizedError } from '../utils/error.js'
 import { createUser, loginUser, resendUserVerifyLink, resetUserPassword, userForgotPassword, verifyUser } from '../services/authService.js'
+import { devLogger } from '../logger/devLogger.js'
 
 export const register = async(req, res)=>{
 
@@ -18,6 +19,8 @@ export const register = async(req, res)=>{
 
     const {firstname, password, lastname, email, role} = req.body
     const {user, verifyLink} = await createUser(firstname, lastname, email,password, role)
+
+    devLogger.info(`successful registration: ${user.id}`)
 
     res.status(201).json({
         success: true,
@@ -35,11 +38,13 @@ export const register = async(req, res)=>{
 
 export const login = async(req,res)=>{
     const {email, password} = req.body
+    devLogger.info(`User login attempt: ${email}`);
     if (!email || !password) {
         throw new BadRequestError("Email and password required");
     }
     const token = await loginUser(email, password);
     if (!token) {
+        devLogger.warn(`unsuccessful login attempt: ${email}`)
         throw new UnauthorizedError("Invalid email or password");
     }
     res.status(200).json({

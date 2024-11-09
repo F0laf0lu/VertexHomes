@@ -8,6 +8,7 @@ import dotenv from 'dotenv'
 import { agentRouter } from './routes/agentRoutes.js';
 import { userRoutes } from './routes/userRoutes.js';
 import { authRoutes } from './routes/authRoutes.js';
+import { devLogger } from './logger/devLogger.js';
 
 dotenv.config()
 
@@ -19,13 +20,18 @@ app.use('/api/auth', authRoutes)
 app.use('/api/users', userRoutes)
 app.use('/api/users/agents', agentRouter)
 
+app.use((req, res, next)=>{
+    devLogger.info(`Incoming request: ${req.method}, ${req.url}`);
+    next()
+})
+
 app.use(errorHandler)
 
 
 app.all('*', (req, res)=>{
     res.status(404).json({
-        status:"failed",
-        message: `Cannot ${req.method} ${req.originalUrl}. Not found`    
+        success:false,
+        error: `Cannot ${req.method} ${req.originalUrl}. Not found`    
     })
 })
 
@@ -33,16 +39,17 @@ app.all('*', (req, res)=>{
 const start = async ()=>{
     try {
         await prisma.$connect();
-        console.log('Database connection successful')
+        devLogger.info('Database connection successful')
         app.listen(config.port, ()=> {
-            console.log(`Server running on port ${config.port}`)
+            devLogger.info(`Server running on port ${config.port}`)
         })
     } catch (error) {
-        console.error(error);
+        devLogger.error(error)
         await prisma.$disconnect(); 
         process.exit(1);
     }
 }
 
 start()
+
 

@@ -1,6 +1,8 @@
+import { devLogger } from "../logger/devLogger.js";
+
 export const errorHandler = (err, req, res, next)=>{
-    console.log("Middleware error handling")
-    console.error(err)
+    devLogger.error(`Error occurred: ${err.message}`);
+    devLogger.error(err.stack);
 
     let errStatus = err.statusCode || 500;
     let errMessage = err.message || "Internal Server Error"
