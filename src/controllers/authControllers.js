@@ -44,7 +44,6 @@ export const login = async(req,res)=>{
     }
     const token = await loginUser(email, password);
     if (!token) {
-        devLogger.warn(`unsuccessful login attempt: ${email}`)
         throw new UnauthorizedError("Invalid email or password");
     }
     res.status(200).json({
