@@ -1,6 +1,6 @@
 import { body, param } from "express-validator";
 import prisma from "../prisma.js";
-import { BadRequestError, CustomError, NotFoundError} from "./error.js";
+import { CustomError, NotFoundError} from "../utils/error.js";
 
 const allowedRoles = ["USER", "AGENT", "ADMIN"];
 

@@ -1,6 +1,6 @@
 import express from "express";
 import { forgotPassword, login, register, resendVerificationLink, resetPassword, verifyEmail } from "../controllers/authControllers.js";
-import { resetPasswordValidate, validateRegister } from "../utils/validators.js";
+import { resetPasswordValidate, validateRegister } from "../validators/userValidators.js";
 
 
 
