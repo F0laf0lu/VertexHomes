@@ -39,8 +39,47 @@ model AgentProfile {
   user User @relation(fields: [userId], references: [id])
   license String 
   location String?
+  listings Listing[]
   agencyName String
   ratingAverage Int @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum PropertyType {
+  RESIDENTIAL
+  COMMERCIAL
+  SPECIALPURPOSE
+  LAND
+}
+
+enum ListingStatus {
+  ACTIVE    
+  PENDING   
+  CLOSED    
+  CANCELLED 
+}
+
+model Listing {
+  id String @id @default(uuid())
+  agent AgentProfile @relation(fields: [agentId], references: [id])
+  agentId String
+  name String
+  description String
+  price Float
+  squareFeet Int?
+  yearBuilt Int?
+  bedrooms Int?
+  bathrooms Int?
+  propertyType PropertyType
+  listingStatus ListingStatus @default(ACTIVE)
+  visitAvailable Boolean
+  street String
+  city String
+  state String
+  zipcode Int
+  images  String[]
+  posted DateTime @default(now())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
