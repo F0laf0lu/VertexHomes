@@ -1,4 +1,4 @@
-import { body } from "express-validator";
+import { body, check } from "express-validator";
 import prisma from "../prisma.js";
 import { BadRequestError } from "../utils/error.js";
 
@@ -6,20 +6,7 @@ const propertyTypes = ['RESIDENTIAL', 'COMMERCIAL', 'SPECIALPURPOSE', 'LAND'];
 const listingStatus = ['ACTIVE', 'PENDING', 'CLOSED', 'CANCELLED']
 
 const listingValidator = [
-    body('agent')
-        .trim()
-        .notEmpty().withMessage("agent id is required")
-        .custom(async(value)=>{
-            const agent = await prisma.agentProfile.findUnique({
-                where:{
-                    id:value
-                }
-            });
-            if(!agent){
-                throw new BadRequestError("Agent not found (from listing validator)");
-            }
-        }),
-
+    body('price').notEmpty().isNumeric().withMessage("price should be number"),
     body('name').trim().notEmpty().withMessage('Name is required'),
     body('description').trim().notEmpty().withMessage('Description is required'),
 

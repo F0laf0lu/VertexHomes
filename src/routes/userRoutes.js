@@ -8,7 +8,7 @@ const router = Router();
 
 router.use(authMiddleware)
 
-router.get('/:userId', getUser)
+router.get('/me', getUser)
 router.patch('/:userId', updateUser)
 router.delete('/:userId', deactivateUser)
 

@@ -16,6 +16,7 @@ dotenv.config()
 const app = express();
 
 app.use(express.json())
+app.use(express.urlencoded({extended: true}))
 
 app.use((req, res, next)=>{
     devLogger.info(`Incoming request: ${req.method} ${req.url}`);

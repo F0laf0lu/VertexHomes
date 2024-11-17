@@ -1,6 +1,6 @@
 import { validationResult } from "express-validator"
 import prisma from "../prisma.js"
-import { BadRequestError, NotFoundError, PermissionDeniedError} from "../utils/error.js"
+import { BadRequestError, ConflictError, NotFoundError, PermissionDeniedError} from "../utils/error.js"
 import { deleteAgentProfileService, getAgentProfileService, updateAgentProfileService } from "../services/agentService.js"
 
 
@@ -25,14 +25,21 @@ export const getAgentProfile = async(req, res)=>{
 
 export const createAgentProfile = async (req, res)=>{
     // get userid from token and create the agent profile with it
-    const {userId, license, location, agencyName} = req.body
+    const {id}  = req.user
+    const {license, location, agencyName} = req.body
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
         throw new BadRequestError([errors.array().map((err)=> err.msg)]);
     }
+
+    const agent = await getAgentProfileService(id)
+    if (!agent) {
+        throw new ConflictError("Agent profile alreafy created for this user")
+    }
+
     const agentProfile = await prisma.agentProfile.create({
         data: {
-            userId, 
+            userId:id, 
             license, 
             location, 
             agencyName

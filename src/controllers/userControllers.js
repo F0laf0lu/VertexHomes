@@ -3,9 +3,8 @@ import { NotFoundError, PermissionDeniedError } from "../utils/error.js";
 
 
 export const getUser = async (req, res) => {
-    const { userId } = req.params;
-
-    const user = await getUserById(userId);
+    const { id } = req.user;
+    const user = await getUserById(id);
     if (!user) {
         throw new NotFoundError("User not found");
     }

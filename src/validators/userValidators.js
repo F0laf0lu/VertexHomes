@@ -84,31 +84,6 @@ export const validateAgentProfile = [
     body('agencyName')
         .trim()
         .notEmpty().withMessage("Please enter your agency name"),
-
-    body('userId')
-        .trim()
-        .notEmpty().withMessage('Provide the user id')
-        // check user id exists and role is agent
-        .custom(async (value)=>{
-                const agentUser = await prisma.user.findUnique({
-                    where:{id:value}})
-                    if (!agentUser) {
-                        throw new NotFoundError("User does not exist");
-                    }
-                    if (agentUser.role !== 'AGENT') {
-                        throw new CustomError("This user role is not an agent", 403)
-                    }})
-        // check profile has not been created before
-        .custom(async (value) => {
-            const agentProfile = await prisma.agentProfile.findUnique({
-                where:{
-                    userId:value
-                }
-            })
-            if (agentProfile) {
-                throw new CustomError("Agent profile exists already", 400);    
-            }
-        })
 ]
 
 
